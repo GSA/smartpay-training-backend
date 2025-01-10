@@ -58,7 +58,7 @@
 
   //format dates from uswds standard to the format needed for backend 
   const formatDateToYYYYMMDD = (dates) => {
-    return dates ? dates.map(date => (date ? new Date(date).toISOString().split('T')[0] : null)) : [];
+    return dates ? dates.map(date => (date ? new Date(date).toISOString() : null)) : [];
   };
 
   async function downloadReport() {
@@ -133,6 +133,7 @@
           :validator="v_all_info$.quiz_names"
           name="Quiz type(s)"
           legend="Quiz type(s)"
+          class="margin-top-4"
         />
         <USWDSComboBox
           v-model="user_input.agency_id"

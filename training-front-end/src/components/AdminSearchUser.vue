@@ -70,6 +70,9 @@
   function cancelEdit(){
     setSelectedUser(undefined)
     setSelectedAgencyId(undefined)
+    // refresh search on cancel from edit reporting page as you can also update user details on the page without
+    // updating the reporting access. Refresh page to display updated details.
+    search()
   }
   
   async function updateUserSuccess(message) {

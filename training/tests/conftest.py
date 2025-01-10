@@ -5,6 +5,7 @@ from pydantic import TypeAdapter
 import pytest
 import yaml
 import pathlib
+from datetime import datetime
 from training.api.deps import agency_repository, quiz_repository, quiz_service, user_repository
 from training.database import engine
 from training import models, schemas
@@ -90,11 +91,13 @@ def db_with_data(db: Session, testdata: dict):
         db.refresh(quiz)
         quiz_ids.append(quiz.id)
 
-    quiz_completion_pass = models.QuizCompletion(user_id=user_ids[-1], quiz_id=quiz_ids[-1], passed=True)
+    quiz_completion_pass = models.QuizCompletion(user_id=user_ids[-1], quiz_id=quiz_ids[-1], passed=True,
+                                                 submit_ts=datetime(2024, 1, 24))
     db.add(quiz_completion_pass)
     db.commit()
 
-    quiz_completion_fail = models.QuizCompletion(user_id=user_ids[-1], quiz_id=quiz_ids[-1], passed=False)
+    quiz_completion_fail = models.QuizCompletion(user_id=user_ids[-1], quiz_id=quiz_ids[-1], passed=False,
+                                                 submit_ts=datetime(2024, 1, 24))
     db.add(quiz_completion_fail)
     db.commit()
     for role in testdata["roles"]:
