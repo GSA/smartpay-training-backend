@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel, ConfigDict
 
 
@@ -15,6 +16,6 @@ class GspcSubmissionQuestions(BaseModel):
 
 
 class GspcSubmission(BaseModel):
-    expiration_date: str
+    gspc_invite_id: uuid.UUID
     responses: GspcSubmissionQuestions
     model_config = ConfigDict(from_attributes=True)

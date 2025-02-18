@@ -2,7 +2,7 @@
     "scripts": {
         "build:frontend": "cd training-front-end && npm install && npm run build && cd ..",
         "federalist": "npm run build:frontend",
-        "dev": "(trap 'kill 0' SIGINT; npm run dev:frontend & npm run dev:backend)",
+        "dev": "(npm run dev:frontend & npm run dev:backend)",
         "dev:frontend": "cd training-front-end && npm run dev",
         "dev:backend": "uvicorn training.main:app --reload",
         "dev:db-start": "docker-compose up -d",

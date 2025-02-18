@@ -1,4 +1,4 @@
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Generic, List, Type, TypeVar
 from sqlalchemy.orm import Session
 from training import models
 
@@ -17,6 +17,16 @@ class BaseRepository(Generic[T]):
         self._session.commit()
         self._session.refresh(item)
         return item
+
+    def bulk_save(self, items: List[T]) -> List[T]:
+        """Bulk saves multiple items efficiently."""
+        self._session.add_all(items)
+        self._session.commit()
+
+        for item in items:
+            self._session.refresh(item)
+
+        return items
 
     def find_by_id(self, id: int) -> T | None:
         return self._session.query(self._model).filter_by(id=id).first()

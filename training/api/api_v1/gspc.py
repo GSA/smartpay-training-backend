@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from typing import Any
 import logging
 import csv
@@ -7,10 +8,10 @@ from training.schemas import GspcInvite, GspcResult, GspcSubmission
 from training.services import GspcService
 from training.repositories import GspcInviteRepository, GspcCompletionRepository
 from training.api.deps import gspc_invite_repository, gspc_completion_repository, gspc_service
-from training.api.email import send_gspc_invite_email
+from training.api.email import InviteTuple, send_gspc_invite_emails
 from training.api.auth import RequireRole
-from training.config import settings
 from training.api.auth import JWTUser
+from fastapi import BackgroundTasks
 
 
 router = APIRouter()
@@ -19,27 +20,25 @@ router = APIRouter()
 @router.post("/gspc-invite")
 async def gspc_admin_invite(
     gspcInvite: GspcInvite,
+    background_tasks: BackgroundTasks,
     repo: GspcInviteRepository = Depends(gspc_invite_repository),
     user=Depends(RequireRole(["Admin"]))
 ):
     '''
     Given a list of emails we parse them into two list (valid and invalid).
-    Then we log each of the valid emails to the db and shoot of an email to each.
+    Then we log each of the valid emails to the db and shoot off an email to each.
     '''
     try:
         # Parse emails string into valid and invalid email list
         gspcInvite.parse()
 
-        for email in gspcInvite.valid_emails:
-            repo.create(email=email, certification_expiration_date=gspcInvite.certification_expiration_date)
-            # If performance becomes an issue use multithreading to send the emails
-            try:
-                params = gspcInvite.certification_expiration_date.strftime('%Y-%m-%d')
-                link = f"{settings.BASE_URL}/gspc_registration/?expirationDate={params}"
-                send_gspc_invite_email(to_email=email, link=link)
-                logging.info(f"Sent gspc invite email to {email}")
-            except Exception as e:
-                logging.error("Error sending gspc invite email", e)
+        entities = repo.bulk_create(emails=gspcInvite.valid_emails, certification_expiration_date=gspcInvite.certification_expiration_date)
+
+        # Explicitly load needed props into memory before passing to the background task
+        entities_data = [InviteTuple(entity.gspc_invite_id, entity.email) for entity in entities]
+
+        # Add email sending to background tasks
+        background_tasks.add_task(send_gspc_invite_emails, invites=entities_data)
 
         # Return object with both list for success and failure messages
         return gspcInvite
